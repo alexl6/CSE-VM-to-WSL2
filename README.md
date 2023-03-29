@@ -7,16 +7,16 @@ The user can expect:
 - GUI appplication suport (e.g. VLC, Firefox, Eclipse, etc.)
 
 
-I took CSE 351 & 391 in Winter 2022 and was able to get consisitent result on all homeworks, labs, and midterm with Attu using the WSL2 distro described here. 
+Known to work with CSE 351, 391, 333, and 451.
 
 ---
-**NOTE: WSL2 is NOT supported by CSE as of Winter 2022.**
+**NOTE: WSL2 is NOT supported by CSE.**
 
-**It is strongly recommended that you test your assignments/programs on a CSE Linux VM or Attu before submitting them.**
+**It is strongly recommended that you test your assignments/programs on a CSE Linux VM or server before submitting them. While the setup worked for me, your milage may vary.**
 
 ---
 
-While the setup worked flawlessly for me, your milage may vary. I am not responsible for point deductions due to inconsistencies between the WSL2 distro and CSE environment (CSE Linux Home VM or Attu).
+**⚠️ Proceed at your own risk**
 
 # Compatibility
 
@@ -28,21 +28,20 @@ While the setup worked flawlessly for me, your milage may vary. I am not respons
 - objdump
 - Git
 - Java
+- Python
 - Bash shell & CLI tools (grep, xargs, sed, etc.)
-- Firefox browser
-- VLC
 
-## Works, but needs additional configuration
-- Licensed software that checks MAC address (Was able to work around this by binding a static MAC address to WSL2)
+## Works, but needs activation every time
+- Licensed software that checks MAC address: MATLAB
 
 ## Known issues
 - USB device support (The workarounds didn't work for me)
-- No systemd
-- GUI scaling maybe inconsistent when using multiple monitors with different scaling factors
+- GUI programs might not work consistently & scaling might be incorrect when using multiple monitors with different scaling factors.
 
 
 # Steps
-1. Follow the instruction on CSE website to set up your VM
+(Skip step 1 & 2 if you already have a tar archive of the VM)
+1. Download VM image & follow the instruction until the step where you log in as "A. Happy User"
 
     [CSE Linux Home VM](https://www.cs.washington.edu/lab/software/linuxhomevm)
 
@@ -52,8 +51,9 @@ While the setup worked flawlessly for me, your milage may vary. I am not respons
     ```
     cd /
     ```
+    (might need to run as super user here ⬇️)
     ```
-    tar -cvpzf ~/VM_backup.tar.gz --exclude=~/VM_backup.tar.gz --one-file-system / `
+    tar -cvpzf ~/VM_backup.tar.gz --exclude=~/VM_backup.tar.gz --one-file-system /
     ```
     Wait for the process to finish. You should see a tar file called  `VM_backup.tar.gz` under your user directory. Move that file to Windows.
 
@@ -83,7 +83,7 @@ While the setup worked flawlessly for me, your milage may vary. I am not respons
 
     - Install `Windows Terminal` from the MS Store (Recommended)
 
-    Refer to [Microsoft Docs](https://docs.microsoft.com/en-us/windows/wsl/install-manual) if you're stuck.
+    Refer to [MS Docs](https://docs.microsoft.com/en-us/windows/wsl/install-manual) if you're stuck.
     
 4. Import tar backup to WSL
 
@@ -99,42 +99,51 @@ While the setup worked flawlessly for me, your milage may vary. I am not respons
     ```
     wsl -d "RockyLinux"
     ```
+    If this is your default/only WSL distro, then you can run `wsl` command without specifying a specific distro.
 
-    Your WSL2 distro should start.
+    You should be logged in as the root use now.
     
     For distros using yum (e.g. Rocky Linux), run the following command to update your distro
     ```
     yum update -y && yum install passwd sudo -y
     ```
-    
-    Then set default user, replace `Alex` with the username you created when setting up the CSE Linux Home VM (probably your NetID)
+
+    Use the supplied script to set up root account password & create a regular account for yourself (use NetID as username if possible, follow instruction on CSE website). The script will try to restart the system & fails, that's okay.
     ```
-    echo -e "[user]\ndefault=Alex" >> /etc/wsl.conf
+    /root/setup.new
+    ```
+    
+    Then set default user, replace `Alex` with the user you just created (probably your NetID). 
+    ```
+    echo -e "[user]\ndefault=Alex\n" >> /etc/wsl.conf
+    ```
+    Then disable some functionalities to enable systemd & resolve possible errors.
+    ```
+    echo -e "[interop]\nappendWindowsPath = false\n" >> /etc/wsl.conf
+    echo -e "[automount]\nmountFsTab = false\n" >> /etc/wsl.conf
+    echo -e "[boot]\nsystemd=true\n" >> /etc/wsl.conf
     ```
 
-    Now we can restart the distro. Open a new PowerShell window, then run
+    Now we can restart the distro. Open a new PowerShell tab, then run
     ```
     wsl --terminate RockyLinux
     ```
     
-    Wait for a few seconds, then run 
+    Wait for a few seconds, then relaunch the WSL VM using either
+
+    `wsl -d RockyLinux` **or** `wsl`
+
+    You should log in as the new user. Try to switch to your home directory with 
     ```
-    wsl -d RockyLinux
+    cd ~
     ```
 
-    If you get an error message about `mountFstab`, edit the `wsl.conf` file to solve this. In your WSL2 distro, run 
+    If that doesn't work, then manually make a home directory using (replace `Alex` with your username)
     ```
-    sudo emacs -nw /etc/wsl.conf
+    sudo mkdir /home/Alex
+    sudo chown -R Alex /home/Alex
     ```
-
-    Change `mountFstab = false ` or delete the line that contains `mountFstab`. Then add the following line
-    ```
-    appendWindowsPath = false`
-    ```
-
-    Press `Ctrl+X` followed by `Ctrl+S` to save the file. Then exit emacs by `Ctrl+X` followed by `Ctrl+C`.
-
-    Now the error should be gond when you restart your distro.
+    Switching to home directory should no longer error out.
 
 
 6. Cleanup
@@ -169,5 +178,5 @@ In Windows, your WSL drive should show up on the left side of File Explorer (or 
 
 
 # End
-This is a guide for myself in case I need to set up the system again in the future. I might make this available publically if this could be healpful for other. Please excuse my poor grammar in this guide. Writing in pretty hard when you're only half awake :(
+This is a guide for myself in case I need to set up the system again in the future. Please excuse my poor grammar in this guide. Writing in pretty hard when you're only half awake :(
 
